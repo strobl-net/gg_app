@@ -1,8 +1,9 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
+import 'package:gg_app/.env.dart' as env;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 
 
 class SurveyPage extends StatefulWidget {
@@ -19,7 +20,8 @@ class _SurveyPageState extends State<SurveyPage> {
       _isLoading = true,
     });
     print("starting to fetch data");
-    final url = "http://192.168.2.121:8000/api/surveys/";
+    var baseUrl = env.environment['baseUrl'];
+    final url = "$baseUrl/api/surveys/";
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
