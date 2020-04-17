@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:gg_app/views/surveys.dart';
 import 'package:gg_app/views/mensa.dart';
+import 'package:gg_app/views/auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -9,6 +11,26 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  SharedPreferences sharedPreferences;
+  bool _isLoggedIn = false; 
+
+  @override
+  void initState() {
+    super.initState();
+    checkLoginStatus();
+  }
+
+  checkLoginStatus() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+    if(sharedPreferences.getString("user.token") == null) {
+      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context) => LoginPage()), (Route<dynamic> route) => false);
+    } else {
+      setState(() {
+        this._isLoggedIn = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,10 +41,13 @@ class _HomePageState extends State<HomePage> {
       drawer: new Drawer(
         child: new ListView(
           children: <Widget>[
-            new UserAccountsDrawerHeader(
-              accountName: new Text("TryAnle"),
-              accountEmail: new Text("TryAngle@Test.com")
-            ),
+            if(this._isLoggedIn)
+              new UserAccountsDrawerHeader(
+                accountName: new Text(sharedPreferences.getString("user.name")),
+                accountEmail: new Text(sharedPreferences.getString("user.email"))
+              )
+            else
+              new Text("not logged in"),
             new ListTile(
               title: new Text("Surveys"),
               trailing: new Icon(Icons.question_answer),
@@ -35,9 +60,12 @@ class _HomePageState extends State<HomePage> {
             ),
             new Divider(),
             new ListTile(
-              title: new Text("Close"),
-              trailing: new Icon(Icons.cancel),
-              onTap: () => Navigator.of(context).pop()
+              title: new Text("Logout"),
+              trailing: new Icon(Icons.lock),
+              onTap: () => {
+                sharedPreferences.clear(),
+                Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context) => LoginPage()), (Route<dynamic> route) => false),
+              },
             )
           ],
         ),

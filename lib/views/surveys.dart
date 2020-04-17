@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:gg_app/.env.dart' as env;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class SurveyPage extends StatefulWidget {
@@ -19,7 +20,6 @@ class _SurveyPageState extends State<SurveyPage> {
     setState(() => {
       _isLoading = true,
     });
-    print("starting to fetch data");
     var baseUrl = env.environment['baseUrl'];
     final url = "$baseUrl/api/surveys/";
     final response = await http.get(url);
@@ -101,10 +101,11 @@ class SingleSurveyPage extends StatefulWidget {
 
 
 class _SingleSurveyPageState extends State<SingleSurveyPage> {
+  SharedPreferences sharedPreferences;
   bool _isLoading = false;
   var survey;
   List optionsList;
-  List surveyAnswers;
+  List<String> surveyAnswers;
   List<TextEditingController> textController;
 
   _SingleSurveyPageState (this.survey);
@@ -113,15 +114,25 @@ class _SingleSurveyPageState extends State<SingleSurveyPage> {
     setState(() => {
       _isLoading = true,
     });
-    final url = "http://192.168.2.121:8000/api/answers/";
-    final response = await http.put(url);
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
 
-      setState(() => {
-        this.survey = data,
-        _isLoading = false,
-      });
+    Map data = {
+      "user_id": sharedPreferences.getString("user.id"),
+      "survey_id": survey["id"],
+      "answers": surveyAnswers
+    };
+    var baseUrl = env.environment['baseUrl'];
+    final url = "$baseUrl/api/answers/";
+    final response = await http.post(
+      url,
+      body: json.encode(data),
+      headers: {
+        "Content-Type" : "application/json",
+        }
+      );
+    if (response.statusCode == 200) {
+      print("sucess");
+    } else {
+      print(response.statusCode.toString());
     }
   }
   @override
@@ -135,6 +146,11 @@ class _SingleSurveyPageState extends State<SingleSurveyPage> {
   @override
   void initState() {
     super.initState();
+    SharedPreferences.getInstance().then((sharedPreferences) {
+      setState(() =>{
+        this.sharedPreferences = sharedPreferences  
+      });
+    });
     this.surveyAnswers = [for(var i=0; i<this.survey["questions"].length; i++) ""];
     this.textController = [for(var i=0; i<this.survey["questions"].length; i++) new TextEditingController()];
     this.optionsList = [for(var i=0; i<this.survey["questions"].length; i++) -1];
@@ -223,7 +239,6 @@ class _SingleSurveyPageState extends State<SingleSurveyPage> {
                                 setState(() => {
                                   this.optionsList[i] = value,
                                   this.surveyAnswers[i] = value.toString(),
-                                  print(this.surveyAnswers)
                                 });
                               }
                             )
@@ -238,9 +253,7 @@ class _SingleSurveyPageState extends State<SingleSurveyPage> {
           
           new RaisedButton(
             onPressed: checkCorrect()? () => {
-              print("To send:"),
-              print(this.surveyAnswers),
-              print("--------------"),
+              this._putAnswer()
             } : null,
             child: Text(
               'Submit',
