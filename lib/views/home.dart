@@ -63,7 +63,10 @@ class _HomePageState extends State<HomePage> {
               title: new Text("Logout"),
               trailing: new Icon(Icons.lock),
               onTap: () => {
-                sharedPreferences.clear(),
+                sharedPreferences.remove('user.token'),
+                sharedPreferences.remove('user.id'),
+                sharedPreferences.remove('user.name'),
+                sharedPreferences.remove('user.email'),
                 Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context) => LoginPage()), (Route<dynamic> route) => false),
               },
             )
