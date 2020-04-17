@@ -43,6 +43,9 @@ class _HomePageState extends State<HomePage> {
           children: <Widget>[
             if(this._isLoggedIn)
               new UserAccountsDrawerHeader(
+                currentAccountPicture: new CircleAvatar(
+                  backgroundImage: NetworkImage("https://www.politischebildung.schulen.bayern.de/fileadmin/_processed_/6/1/csm_SMV_Logo_Web_d185e74d9d.png"),
+                ),
                 accountName: new Text(sharedPreferences.getString("user.name")),
                 accountEmail: new Text(sharedPreferences.getString("user.email"))
               )
@@ -74,7 +77,47 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       body: Center(
-        child: new Text("HomePage")
+        child: new Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            new Text("The home page is work in progress!"),
+            new Divider(),
+            new Container(
+              alignment: Alignment(-1.0, 0.0),
+              child: new Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  new Text("Guide for current features:"),
+                  new Text("1. Press the 3 bars on the top left"),
+                  new Text("2. Select surveys"),
+                  new Text("3. Select a survey"),
+                  new Text("4. Answer the questions and press submit"),
+                ],
+              ),
+            ),
+            new Divider(),
+            new Text("to log out, press the 3 bars on the top left and select logout"),
+            new Divider(),
+            new Container(
+              alignment: Alignment(-1.0, 0.0),
+              child: new Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  new Text("Upcoming features:"),
+                  new Text("- check if user answered a survey already"),
+                  new Text("- see survey results"),
+                  new Text("- mensa plan"),
+                  new Text("- application logo"),
+                  new Text("- survey expiration date"),
+                  new Text("- school login via 'open-id'"),
+                  new Text("- browser version (and non-appstore ios app)"),
+                  new Text("- Admin Panel to create and manage surveys"),
+                  new Text("- personalised representation table"),
+                ],
+              ),
+            ),
+          ],
+        )
       ),
     );
   }

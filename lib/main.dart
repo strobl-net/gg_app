@@ -8,7 +8,10 @@ class GGApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    SharedPreferences.setMockInitialValues({});
+
+    //comment mockvalues in release!
+    // SharedPreferences.setMockInitialValues({});
+    
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
