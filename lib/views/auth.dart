@@ -15,8 +15,20 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-
+  final TextEditingController emailController = new TextEditingController();
+  final TextEditingController passwordController = new TextEditingController();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    emailController.addListener(reload);
+    passwordController.addListener(reload);
+    super.initState();
+  }
+
+  void reload() {
+    setState(() => {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,8 +103,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  final TextEditingController emailController = new TextEditingController();
-  final TextEditingController passwordController = new TextEditingController();
+
 
   Container textSection() {
     return Container(
@@ -102,7 +113,6 @@ class _LoginPageState extends State<LoginPage> {
           TextFormField(
             controller: emailController,
             cursorColor: Colors.white,
-
             style: TextStyle(color: Colors.white70),
             decoration: InputDecoration(
               icon: Icon(Icons.email, color: Colors.white70),
@@ -134,10 +144,10 @@ class _LoginPageState extends State<LoginPage> {
       margin: EdgeInsets.only(top: 50.0),
       padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
       child: Text("My GG",
-          style: TextStyle(
-          color: Colors.white70,
-          fontSize: 40.0,
-          fontWeight: FontWeight.bold)),
+        style: TextStyle(
+        color: Colors.white70,
+        fontSize: 40.0,
+        fontWeight: FontWeight.bold)),
     );
   }
 }

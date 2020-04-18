@@ -3,9 +3,8 @@ import 'package:http/http.dart' as http;
 
 import 'package:gg_app/.env.dart' as env;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:gg_app/views/single_survey.dart';
 
 class SurveyPage extends StatefulWidget {
   @override
@@ -13,8 +12,10 @@ class SurveyPage extends StatefulWidget {
 }
 
 class _SurveyPageState extends State<SurveyPage> {
+  SharedPreferences sharedPreferences;
   bool _isLoading = false;
   var surveys;
+  var filteredAnswers;
 
   _fetchSurveys() async {
     setState(() => {
@@ -30,12 +31,48 @@ class _SurveyPageState extends State<SurveyPage> {
       setState(() => {
         this.surveys = data,
         _isLoading = false,
+        _fetchUserAnswers(),
       });
     }
   }
 
+  _fetchUserAnswers() async {
+    setState(() => {
+      _isLoading = true,
+    });
+
+    print(sharedPreferences.getString('user.id'));
+    var baseUrl = env.environment['baseUrl'];
+    final url = "$baseUrl/api/answers/?user_id=" + sharedPreferences.getString('user.id');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      setState(() => {
+        this.filteredAnswers = data,
+        _isLoading = false,
+        print(this.filteredAnswers)
+      });
+    }
+  }
+
+  _checkAnswered(var i) {
+      for (var j = 0; j < this.filteredAnswers.length; j++) {
+        if (this.surveys[i]['id'] == this.filteredAnswers[j]['survey_id']) {
+          return true;
+        }
+      }
+    return false;
+  }
+
   @override
   void initState() {
+    SharedPreferences.getInstance().then((sharedPreferences) {
+      setState(() =>{
+        this.sharedPreferences = sharedPreferences  
+      });
+    });
     super.initState();
     _fetchSurveys();
   }
@@ -58,210 +95,71 @@ class _SurveyPageState extends State<SurveyPage> {
             itemCount: this.surveys != null ? this.surveys.length : 0,
             itemBuilder: (context, i) {
               final survey = this.surveys[i];
-              return new FlatButton(
-                onPressed: () => {
-                  Navigator.push(context, 
-                    new MaterialPageRoute(
-                      builder: (context) => new SingleSurveyPage(
-                        survey: survey)
-                    )),
-                },
-                child: new Column(
-                  children: <Widget>[
-                    new Card(
-                      child: Column (
-                        children: <Widget>[
-                          new ListTile(
-                            leading: new Icon(Icons.alarm_add),
-                            title: new Text(survey["name"]),
-                            subtitle: new Text(survey["description"]),
-                          ),
-                        ],
+              if (!this._checkAnswered(i))
+                return new FlatButton( 
+                  onPressed: () => {
+                    Navigator.push(context, 
+                      new MaterialPageRoute(
+                        builder: (context) => new SingleSurveyPage(
+                          survey: survey)
+                      )).then((value) {
+                        this._fetchSurveys();
+                        final snackBar = SnackBar(
+                          content: Text("Survey has been answered!"),
+                        );
+                        Scaffold.of(context).showSnackBar(snackBar);
+                      }),
+                  },
+                  child: new Column(
+                    children: <Widget>[
+                      new Card(
+                        child: Column (
+                          children: <Widget>[
+                            new ListTile(
+                              leading: new Icon(Icons.alarm_add),
+                              title: new Text(survey["name"]),
+                              subtitle: new Text(survey["description"]),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                );
+              else
+              return new FlatButton( 
+                  onPressed: () {
+                    final snackBar = SnackBar(
+                      content: Text("You have already answered this survey! (changing answers coming soon!)"),
+                      action: SnackBarAction(
+                        label: "Change Answer",
+                        onPressed: () {
+
+                        },
+                      ),
+                    );
+                    Scaffold.of(context).showSnackBar(snackBar);
+                    },
+                  child: new Column(
+                    children: <Widget>[
+                      new Card(
+                        color: new Color.fromRGBO(0, 0, 0, 0),
+                        child: Column (
+                          children: <Widget>[
+                            new ListTile(
+                              leading: new Icon(Icons.alarm_on),
+                              title: new Text(survey["name"]),
+                              subtitle: new Text(survey["description"]),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
               );
             },
           )
       ),
-    );
-  }
-}
-
-
-class SingleSurveyPage extends StatefulWidget {
-  final survey;
-
-  SingleSurveyPage({Key key, @required this.survey}) : super(key: key);
-
-  @override
-  _SingleSurveyPageState createState() => _SingleSurveyPageState(survey);
-}
-
-
-class _SingleSurveyPageState extends State<SingleSurveyPage> {
-  SharedPreferences sharedPreferences;
-  bool _isLoading = false;
-  var survey;
-  List optionsList;
-  List<String> surveyAnswers;
-  List<TextEditingController> textController;
-
-  _SingleSurveyPageState (this.survey);
-
-  _putAnswer() async {
-    setState(() => {
-      _isLoading = true,
-    });
-
-    Map data = {
-      "user_id": sharedPreferences.getString("user.id"),
-      "survey_id": survey["id"],
-      "answers": surveyAnswers
-    };
-    var baseUrl = env.environment['baseUrl'];
-    final url = "$baseUrl/api/answers/";
-    final response = await http.post(
-      url,
-      body: json.encode(data),
-      headers: {
-        "Content-Type" : "application/json",
-        }
-      );
-    if (response.statusCode == 200) {
-      print("sucess");
-    } else {
-      print(response.statusCode.toString());
-    }
-  }
-  @override
-  void dispose() {
-    for(var textController in this.textController) {
-      textController.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    SharedPreferences.getInstance().then((sharedPreferences) {
-      setState(() =>{
-        this.sharedPreferences = sharedPreferences  
-      });
-    });
-    this.surveyAnswers = [for(var i=0; i<this.survey["questions"].length; i++) ""];
-    this.textController = [for(var i=0; i<this.survey["questions"].length; i++) new TextEditingController()];
-    this.optionsList = [for(var i=0; i<this.survey["questions"].length; i++) -1];
-    for (var controller in this.textController) {
-        controller.addListener(this.setTextValues);
-    }
-  }
-
-  void setTextValues() {
-    for (var i=0; i<this.survey["questions"].length; i++) {
-      if (this.survey["questions"][i]["type"] == "text" || this.survey["questions"][i]["type"] == "number") {
-        this.surveyAnswers[i] = textController[i].text;
-        setState(() {
-        });
-      }
-    }
-  }
-
-  bool checkCorrect() {
-    for (var i=0; i<this.survey["questions"].length; i++) {
-      if (this.survey["questions"][i]["type"] == "text" || this.survey["questions"][i]["type"] == "number"){
-        if (this.surveyAnswers[i] == ""){
-          return false;
-        }
-      }
-      if (this.survey["questions"][i]["type"] == "radio"){
-        if (this.surveyAnswers[i] == null || this.surveyAnswers[i] == "" || this.surveyAnswers[i] == -1){
-          return false;
-        }
-      }  
-    }
-    return true;
-  }
-
-  @override
-    Widget build(BuildContext context) {
-      return new Scaffold (
-        appBar: new AppBar(
-          title: Text(this.survey["name"]),
-        ),
-        body: new Column (
-          children: <Widget>[
-            new Expanded(
-              child: new ListView.builder(
-                itemCount: this.survey["questions"] != null ? this.survey["questions"].length : 0,
-                itemBuilder: (context, i) {
-                  final question = this.survey["questions"][i];
-                  return new Container(
-                    margin: const EdgeInsets.all(8.0),
-                    child: new Column(
-                      children: <Widget>[
-                        new Container(
-                          alignment: Alignment(-1.0, 0.0),
-                          color: Colors.amber,
-                          child: new Text(question["question"] + (question["required"]? " *" : "")),
-                        ),
-                        if (question["type"] == "text")
-                          new Container(
-                            color: Colors.white,
-                            child: new TextField(
-                              controller: this.textController[i],
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                                hintText: 'Your Answer'
-                            ), 
-                            )
-                          )
-                        else if (question["type"] == "number")
-                          new Container(
-                            color: Colors.white,
-                            child: new TextField(
-                              controller: this.textController[i],
-                              keyboardType: TextInputType.number,
-                              inputFormatters: <TextInputFormatter>[
-                                WhitelistingTextInputFormatter.digitsOnly
-                              ],
-                            )
-                          )
-                        else if (question["type"] == "radio")
-                          for (var option in question["options"])
-                            new RadioListTile<int>(
-                              title: new Text(option["name"]),
-                              value: option["value"],
-                              groupValue: this.optionsList[i],
-                              onChanged: (int value) {
-                                setState(() => {
-                                  this.optionsList[i] = value,
-                                  this.surveyAnswers[i] = value.toString(),
-                                });
-                              }
-                            )
-                        else
-                          new Text("Invalid / No Type given")
-                      ],
-                    )
-                  ); 
-                },
-              ),
-            ),
-          
-          new RaisedButton(
-            onPressed: checkCorrect()? () => {
-              this._putAnswer()
-            } : null,
-            child: Text(
-              'Submit',
-              style: TextStyle(fontSize: 20)
-            ),
-          ),
-        ],
-      )
     );
   }
 }

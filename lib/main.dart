@@ -8,9 +8,11 @@ class GGApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // build android app
+    //  flutter build apk --split-per-abi
 
     //comment mockvalues in release!
-    // SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({});
     
     return MaterialApp(
       title: 'Flutter Demo',

@@ -104,7 +104,8 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   new Text("Upcoming features:"),
-                  new Text("- check if user answered a survey already"),
+                  new Text("X check if user answered a survey already [DONE]"),
+                  new Text("- change answers given to a survey"),
                   new Text("- see survey results"),
                   new Text("- mensa plan"),
                   new Text("- application logo"),
