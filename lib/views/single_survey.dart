@@ -44,13 +44,16 @@ class _SingleSurveyPageState extends State<SingleSurveyPage> {
       body: json.encode(data),
       headers: {
         "Content-Type" : "application/json",
+        "Authorization": "Token " + sharedPreferences.getString("user.token")
         }
       );
     if (response.statusCode == 201) {
-      print("sucess");
+      setState(() => {
+        _isLoading = false,
+      });
       Navigator.of(context).pop(this);
     } else {
-      print(response.statusCode.toString());
+      print(response.statusCode);
     }
   }
   @override

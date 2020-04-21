@@ -12,7 +12,7 @@ class GGApp extends StatelessWidget {
     //  flutter build apk --split-per-abi
 
     //comment mockvalues in release!
-    SharedPreferences.setMockInitialValues({});
+    //SharedPreferences.setMockInitialValues({});
     
     return MaterialApp(
       title: 'Flutter Demo',

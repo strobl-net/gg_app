@@ -23,7 +23,11 @@ class _SurveyPageState extends State<SurveyPage> {
     });
     var baseUrl = env.environment['baseUrl'];
     final url = "$baseUrl/api/surveys/";
-    final response = await http.get(url);
+    final response = await http.get(
+      url,
+      headers: {
+        "Authorization": sharedPreferences.getString("user.token")
+      });
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -41,10 +45,13 @@ class _SurveyPageState extends State<SurveyPage> {
       _isLoading = true,
     });
 
-    print(sharedPreferences.getString('user.id'));
     var baseUrl = env.environment['baseUrl'];
     final url = "$baseUrl/api/answers/?user_id=" + sharedPreferences.getString('user.id');
-    final response = await http.get(url);
+    final response = await http.get(
+      url,
+      headers: {
+        "Authorization": "Token " + sharedPreferences.getString("user.token")
+      });
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -54,6 +61,8 @@ class _SurveyPageState extends State<SurveyPage> {
         _isLoading = false,
         print(this.filteredAnswers)
       });
+    } else {
+      print(response.statusCode);
     }
   }
 
@@ -70,11 +79,11 @@ class _SurveyPageState extends State<SurveyPage> {
   void initState() {
     SharedPreferences.getInstance().then((sharedPreferences) {
       setState(() =>{
-        this.sharedPreferences = sharedPreferences  
+        this.sharedPreferences = sharedPreferences,
+        _fetchSurveys(),
       });
     });
     super.initState();
-    _fetchSurveys();
   }
 
   @override
