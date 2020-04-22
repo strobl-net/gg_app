@@ -37,7 +37,6 @@ class _UsersPageState extends State<UsersPage> {
       profiles = jsonDecode(response.body);
       setState(() => {
         _isLoading = false,
-        print(profiles)
       });
       
     } else {
@@ -77,7 +76,7 @@ class _UsersPageState extends State<UsersPage> {
             final profile = this.profiles[i];
             return new FlatButton(
               onPressed: () => {
-                print("hello")
+                null
               }, 
               child: new Column(
                 children: <Widget>[
