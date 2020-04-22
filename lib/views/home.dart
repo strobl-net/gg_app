@@ -1,8 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:gg_app/views/users.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:gg_app/views/surveys.dart';
 import 'package:gg_app/views/mensa.dart';
 import 'package:gg_app/views/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:gg_app/.env.dart' as env;
 
 
 class HomePage extends StatefulWidget {
@@ -12,12 +17,29 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   SharedPreferences sharedPreferences;
+  var profile;
   bool _isLoggedIn = false; 
+  bool _isLoading = false;
 
   @override
   void initState() {
+    SharedPreferences.getInstance().then((sharedPreferences) {
+      setState(() =>{
+        this.sharedPreferences = sharedPreferences,
+        checkLoginStatus()
+      });
+    });
     super.initState();
-    checkLoginStatus();
+  }
+
+  bool isAuthority() {
+    if (_isLoggedIn) {
+      if (sharedPreferences.getBool('user.is_super_student') || sharedPreferences.getBool('user.is_teacher')) {
+        return true;
+      }
+      return false;
+    }
+    return false;
   }
 
   checkLoginStatus() async {
@@ -26,7 +48,7 @@ class _HomePageState extends State<HomePage> {
       Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context) => LoginPage()), (Route<dynamic> route) => false);
     } else {
       setState(() {
-        this._isLoggedIn = true;
+        _isLoggedIn = true;
       });
     }
   }
@@ -61,6 +83,13 @@ class _HomePageState extends State<HomePage> {
               trailing: new Icon(Icons.fastfood),
               onTap: () => Navigator.of(context).push(new MaterialPageRoute(builder: (BuildContext context) => new MensaPage())),
             ),
+            new ListTile(
+              title: new Text("Users"),
+              trailing: new Icon(Icons.people),
+              onTap: isAuthority() ? () => {
+                Navigator.of(context).push(new MaterialPageRoute(builder: (BuildContext context) => new UsersPage())),
+              } : null,
+            ),
             new Divider(),
             new ListTile(
               title: new Text("Logout"),
@@ -70,6 +99,11 @@ class _HomePageState extends State<HomePage> {
                 sharedPreferences.remove('user.id'),
                 sharedPreferences.remove('user.name'),
                 sharedPreferences.remove('user.email'),
+                sharedPreferences.remove('user.grade'),
+                sharedPreferences.remove('user.is_super_student'),
+                sharedPreferences.remove('user.is_tech'),
+                sharedPreferences.remove('user.is_teacher'),
+                sharedPreferences.remove('user.is_super_teacher'),
                 Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context) => LoginPage()), (Route<dynamic> route) => false),
               },
             )

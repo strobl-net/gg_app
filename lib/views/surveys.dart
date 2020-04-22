@@ -26,7 +26,7 @@ class _SurveyPageState extends State<SurveyPage> {
     final response = await http.get(
       url,
       headers: {
-        "Authorization": sharedPreferences.getString("user.token")
+        "Authorization": "Token " + sharedPreferences.getString("user.token")
       });
 
     if (response.statusCode == 200) {
@@ -59,7 +59,6 @@ class _SurveyPageState extends State<SurveyPage> {
       setState(() => {
         this.filteredAnswers = data,
         _isLoading = false,
-        print(this.filteredAnswers)
       });
     } else {
       print(response.statusCode);

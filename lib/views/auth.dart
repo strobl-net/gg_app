@@ -52,6 +52,37 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  _fetchProfile() async{
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    setState(() => {
+      _isLoading = true,
+    });
+    var baseUrl = env.environment['baseUrl'];
+    final url = "$baseUrl/api/profiles/" + sharedPreferences.getString('user.id');
+    final response = await http.get(
+      url,
+      headers: {
+        "Authorization": "Token " + sharedPreferences.getString("user.token")
+      });
+
+    if (response.statusCode == 200) {
+      final profile = jsonDecode(response.body);
+
+      setState(() => {
+        _isLoading = false,
+      });
+      
+      sharedPreferences.setString("user.grade", profile['grade']);
+      sharedPreferences.setBool("user.is_super_student", profile['is_super_student']);
+      sharedPreferences.setBool("user.is_tech", profile['is_tech']);
+      sharedPreferences.setBool("user.is_teacher", profile['is_teacher']);
+      sharedPreferences.setBool("user.is_super_teacher", profile['is_super_teacher']);
+      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context) => HomePage()), (Route<dynamic> route) => true);
+    } else {
+      print(response.body);
+    }
+  }
+
   signIn(String email, password) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     Map credentials = {
@@ -65,14 +96,13 @@ class _LoginPageState extends State<LoginPage> {
     if(response.statusCode == 200) {
       user = json.decode(response.body);
       if(user != null) {
-        setState(() {
-          _isLoading = false;
+        setState(() => {
+          _fetchProfile()
         });
         sharedPreferences.setString("user.token", user['token']);
         sharedPreferences.setString("user.id", user["user"]['id'].toString());
         sharedPreferences.setString("user.name", user['user']['username']);
         sharedPreferences.setString("user.email", user['user']['email']);
-        Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context) => HomePage()), (Route<dynamic> route) => true);
       }
     }
     else {
