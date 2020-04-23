@@ -82,31 +82,56 @@ class _UsersPageState extends State<UsersPage> {
                 children: <Widget>[
                   new Card(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget> [
                         if (profile["is_teacher"])
                           new ListTile(
                             leading: new Icon(Icons.star),
-                            title: new Text(profile["user"]),
-                            subtitle: new Text("teacher"),
-                          )  
+                            title: new Text(profile["user_name"]),
+                            subtitle: Column (
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget> [
+                                new Text("teacher"),
+                                new Text(profile["user_email"])
+                              ]
+                            )
+                          )
                         else if (profile["is_super_student"])
                           new ListTile(
                             leading: new Icon(Icons.person),
-                            title: new Text(profile["user"]),
-                            subtitle: new Text("is super student"),
+                            title: new Text(profile["user_name"]),
+                            subtitle: Column (
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget> [
+                                new Text("is super student"),
+                                new Text(profile["user_email"])
+                              ]
+                            )
                           )
                         else if (profile["is_tech"])
                           new ListTile(
                             leading: new Icon(Icons.person),
-                            title: new Text(profile["user"]),
-                            subtitle: new Text("is tech student"),
+                            title: new Text(profile["user_name"]),
+                            subtitle: Column (
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget> [
+                                new Text("is tech student"),
+                                new Text(profile["user_email"])
+                              ]
+                            )                            
                           )
 
                         else
                           new ListTile(
                             leading: new Icon(Icons.person_outline),
-                            title: new Text(profile["user"]),
-                            subtitle: new Text("is a normal student"),
+                            title: new Text(profile["user_name"]),
+                            subtitle: Column (
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget> [
+                                new Text("is a normal student"),
+                                new Text(profile["user_email"])
+                              ]
+                            )                            
                           )
                       ]
                     )
