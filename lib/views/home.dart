@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> {
                   new Text("X check if user answered a survey already [DONE]"),
                   new Text("- change answers given to a survey"),
                   new Text("- see survey results"),
-                  new Text("- mensa plan"),
+                  new Text("X mensa plan [DONE]"),
                   new Text("- application logo"),
                   new Text("- survey expiration date"),
                   new Text("- school login via 'open-id'"),
