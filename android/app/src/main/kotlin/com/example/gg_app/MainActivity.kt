@@ -1,4 +1,4 @@
-package com.example.gg_app
+package net.strobl.gg_app
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity
