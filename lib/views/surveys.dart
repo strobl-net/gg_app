@@ -74,6 +74,16 @@ class _SurveyPageState extends State<SurveyPage> {
     return false;
   }
 
+  int _getAnswerFromSurvey(var i) {
+    int tmp;
+    for (var j = 0; j < this.filteredAnswers.length; j++) {
+      if (this.surveys[i]['id'] == this.filteredAnswers[j]['survey_id']) {
+        tmp = j;
+      }
+    }
+    return tmp;
+  }
+
   @override
   void initState() {
     SharedPreferences.getInstance().then((sharedPreferences) {
@@ -135,19 +145,29 @@ class _SurveyPageState extends State<SurveyPage> {
                   ),
                 );
               else
-              return new FlatButton( 
+                return new FlatButton( 
                   onPressed: () {
                     final snackBar = SnackBar(
                       content: Text("You have already answered this survey! (changing answers coming soon!)"),
                       action: SnackBarAction(
                         label: "Change Answer",
                         onPressed: () {
-
+                          Navigator.push(context, new MaterialPageRoute(
+                            builder: (context) => new AnsweredSurveyPage(
+                              answer: this.filteredAnswers[this._getAnswerFromSurvey(i)],
+                              survey: survey
+                            ))).then((value) {
+                              this._fetchSurveys();
+                              final snackBar = SnackBar(
+                                content: Text("Successfully changed answers!"),
+                              );
+                              Scaffold.of(context).showSnackBar(snackBar);
+                            });
                         },
                       ),
                     );
                     Scaffold.of(context).showSnackBar(snackBar);
-                    },
+                  },
                   child: new Column(
                     children: <Widget>[
                       new Card(

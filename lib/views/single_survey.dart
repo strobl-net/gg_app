@@ -98,7 +98,7 @@ class _SingleSurveyPageState extends State<SingleSurveyPage> {
         }
       }
       if (this.survey["questions"][i]["type"] == "radio"){
-        if (this.surveyAnswers[i] == null || this.surveyAnswers[i] == "" || this.surveyAnswers[i] == -1){
+        if (this.surveyAnswers[i] == null || this.surveyAnswers[i] == "" || this.surveyAnswers[i] == (-1).toString()){
           return false;
         }
       }  
@@ -175,6 +175,205 @@ class _SingleSurveyPageState extends State<SingleSurveyPage> {
           new RaisedButton(
             onPressed: checkCorrect()? () => {
               this._putAnswer(),
+            } : null,
+            child: Text(
+              'Submit',
+              style: TextStyle(fontSize: 20)
+            ),
+          ),
+        ],
+      )
+    );
+  }
+}
+
+
+class AnsweredSurveyPage extends StatefulWidget {
+  final survey;
+  final answer;
+
+  AnsweredSurveyPage({Key key, @required this.survey, @required this.answer}) : super(key: key);
+
+  @override
+  _AnsweredSurveyPageState createState() => _AnsweredSurveyPageState(survey, answer);
+}
+
+
+class _AnsweredSurveyPageState extends State<AnsweredSurveyPage> {
+  SharedPreferences sharedPreferences;
+  bool _isLoading = false;
+  var survey;
+  var answer;
+  List optionsList;
+  List<String> surveyAnswers;
+  List<TextEditingController> textController;
+
+  _AnsweredSurveyPageState (this.survey, this.answer);
+
+  _postAnswer() async {
+    setState(() => {
+      _isLoading = true,
+    });
+
+    Map data = {
+      "user_id": sharedPreferences.getString("user.id"),
+      "survey_id": survey["id"],
+      "answers": surveyAnswers
+    };
+
+    var baseUrl = env.environment['baseUrl'];
+    final url = "$baseUrl/api/answers/" + this.answer["id"].toString() + "/";
+    final response = await http.patch(
+      url,
+      body: json.encode(data),
+      headers: {
+        "Content-Type" : "application/json",
+        "Authorization": "Token " + sharedPreferences.getString("user.token")
+        }
+      );
+    if (response.statusCode == 200) {
+      setState(() => {
+        _isLoading = false,
+      });
+      Navigator.of(context).pop(this);
+    } else {
+      print(response.statusCode);
+    }
+  }
+  @override
+  void dispose() {
+    for(var textController in this.textController) {
+      textController.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((sharedPreferences) {
+      setState(() =>{
+        this.sharedPreferences = sharedPreferences  
+      });
+    });
+    this.surveyAnswers = [for(var i=0; i<this.survey["questions"].length; i++) ""];
+    this.textController = [for(var i=0; i<this.survey["questions"].length; i++) new TextEditingController()];
+    this.optionsList = [for(var i=0; i<this.survey["questions"].length; i++) -1];
+    for (var controller in this.textController) {
+        controller.addListener(this.setTextValues);
+    }
+    setState(() {
+      this.surveyAnswers = [for(var answer in this.answer["answers"]) answer.toString()];
+      print(this.surveyAnswers);
+      for (var i = 0; i<this.surveyAnswers.length; i++) {
+        if(this.survey["questions"][i]["type"] == "text"){
+          print("text: " + this.surveyAnswers[i]);
+          this.textController[i].text = this.surveyAnswers[i];
+        } else if ( this.survey["questions"][i]["type"] == "number") {
+          this.textController[i].text = this.answer["answers"][1];
+        } else if (this.survey["questions"][i]["type"] == "radio") {
+          print("radio: " + this.surveyAnswers[i]);
+          this.optionsList[i] = int.parse(this.surveyAnswers[i]);
+        }
+      }
+    });
+  }
+
+  void setTextValues() {
+    for (var i=0; i<this.survey["questions"].length; i++) {
+      if (this.survey["questions"][i]["type"] == "text" || this.survey["questions"][i]["type"] == "number") {
+        this.surveyAnswers[i] = textController[i].text;
+        setState(() {
+        });
+      }
+    }
+  }
+
+  bool checkCorrect() {
+    for (var i=0; i<this.survey["questions"].length; i++) {
+      if (this.survey["questions"][i]["type"] == "text" || this.survey["questions"][i]["type"] == "number"){
+        if (this.surveyAnswers[i] == ""){
+          return false;
+        }
+      }
+      if (this.survey["questions"][i]["type"] == "radio"){
+        if (this.surveyAnswers[i] == null || this.surveyAnswers[i] == "" || this.surveyAnswers[i] == (-1).toString()){
+          return false;
+        }
+      }  
+    }
+    return true;
+  }
+
+  @override
+    Widget build(BuildContext context) {
+      return new Scaffold (
+        appBar: new AppBar(
+          title: Text(this.survey["name"]),
+        ),
+        body: new Column (
+          children: <Widget>[
+            new Expanded(
+              child: new ListView.builder(
+                itemCount: this.survey["questions"] != null ? this.survey["questions"].length : 0,
+                itemBuilder: (context, i) {
+                  final question = this.survey["questions"][i];
+                  return new Container(
+                    margin: const EdgeInsets.all(8.0),
+                    child: new Column(
+                      children: <Widget>[
+                        new Container(
+                          alignment: Alignment(-1.0, 0.0),
+                          color: Colors.amber,
+                          child: new Text(question["question"] + (question["required"]? " *" : "")),
+                        ),
+                        if (question["type"] == "text")
+                          new Container(
+                            color: Colors.white,
+                            child: new TextField(
+                              controller: this.textController[i],
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'Your Answer'
+                            ), 
+                            )
+                          )
+                        else if (question["type"] == "number")
+                          new Container(
+                            color: Colors.white,
+                            child: new TextField(
+                              controller: this.textController[i],
+                              keyboardType: TextInputType.number,
+                              inputFormatters: <TextInputFormatter>[
+                                WhitelistingTextInputFormatter.digitsOnly
+                              ],
+                            )
+                          )
+                        else if (question["type"] == "radio")
+                          for (var option in question["options"])
+                            new RadioListTile<int>(
+                              title: new Text(option["name"]),
+                              value: option["value"],
+                              groupValue: this.optionsList[i],
+                              onChanged: (int value) {
+                                setState(() => {
+                                  this.optionsList[i] = value,
+                                  this.surveyAnswers[i] = value.toString(),
+                                });
+                              }
+                            )
+                        else
+                          new Text("Invalid / No Type given")
+                      ],
+                    )
+                  ); 
+                },
+              ),
+            ),
+          
+          new RaisedButton(
+            onPressed: checkCorrect()? () => {
+              this._postAnswer(),
             } : null,
             child: Text(
               'Submit',
